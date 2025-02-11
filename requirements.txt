@@ -1,0 +1,5 @@
+qq-botpy
+psutil
+requests
+lxml
+openai
