@@ -114,9 +114,11 @@ class MyClient(botpy.Client):
             return await get_lizi_setu(message)
         elif msg.lower().split()[0] in ['/reset', 'reset', '重置']:
             reset()
+            logger.info("reset done.")
             return await message.reply(content="已开启新的对话~")
         else:
             result = chat(msg)
+            logger.info(result)
             return await message.reply(content=result)
 
     async def on_group_at_message_create(self, message: GroupMessage):
