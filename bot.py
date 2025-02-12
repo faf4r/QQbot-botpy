@@ -12,7 +12,7 @@ from datetime import datetime
 
 from plugins.news_cmd import jwc5news, xg5news
 from plugins.setu import lolicon_setu, lizi_setu
-from plugins.chatbot import chat, reset
+from plugins.chatbot import chat, reset, change_model
 
 logger = logging.get_logger()
 
@@ -116,6 +116,16 @@ class MyClient(botpy.Client):
             reset()
             logger.info("reset done.")
             return await message.reply(content="已开启新的对话~")
+        elif msg.lower().split()[0] in ['/model', 'model', '模型']:
+            txt = msg.lower().split()[1:]
+            if not txt:
+                return await message.reply(content="请指定模型名称\n目前支持的模型有：kimi, deepseek")
+            model = txt[0]
+            if model not in ['kimi', 'deepseek']:
+                return await message.reply(content="目前支持的模型有：kimi, deepseek")
+            change_model(model)
+            logger.info(f"已切换模型为{model}")
+            return await message.reply(content=f"已切换模型为{model}")
         else:
             result = chat(msg)
             logger.info(result)
