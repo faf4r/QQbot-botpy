@@ -6,11 +6,12 @@
    - 从学工网站获取最新的5条新闻，使用`/xg5news`命令。
 
 2. **随机图片**：
-   - 从Lizi API获取图片，使用`/setu`命令。
+   - 从lolicon API获取图片，使用`/setu`命令。
+   - 指令可指定关键字，使用空格分隔。
 
 3. **聊天功能**：
-   - 使用Moonshot AI提供的API与用户进行对话，使用`chat`函数。
-   - 支持重置对话历史，使用`reset`函数。
+   - 使用kimi和硅基流动提供的API与用户进行对话。
+   - 支持重置对话历史和模型切换。
 
 4. **系统状态监控**：
    - 获取服务器的CPU、内存和磁盘使用情况，使用`/status`命令。
@@ -26,4 +27,3 @@
 
 # TODO
 - [ ] `plugins/chatbot.py`中的`_process_queue`存在问题，进行对话(即调用`chat`)时会出现`Task was destroyed but it is pending!`的报错，不过并不影响程序运行，不保证长久运行不出问题。
-- [ ] setu模块的异步请求

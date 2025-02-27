@@ -51,7 +51,7 @@ class MyClient(botpy.Client):
             else:
                 tag_list = None
             logger.info('请求中...')
-            img, img_url, result = lolicon_setu(tag_list=tag_list)
+            img, img_url, result = await lolicon_setu(tag_list=tag_list)
             logger.info(result)
             logger.info(img_url)
             if img_url is None:
