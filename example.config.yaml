@@ -1,13 +1,15 @@
 # 机器人配置
 appid: "10000000"
-secret: "2rgVKA0qkk751exampledVNF7zsleX"
+secret: "2rgVKA0qkkxxx1exampledVNF7zsleX"
 
 # kimiAPI
-kimi_key: "kimi开放平台API"
-kimi_url: "https://api.moonshot.cn/v1"
-kimi_model: "moonshot-v1-8k"
+kimi:
+  url: "https://api.moonshot.cn/v1"
+  key: "sk-7wU8LHxRKxxxxxxxxxxxxxxxxxxxxBZ1cKmwK"
+  model: "moonshot-v1-8k"
 
-#SiliconCloud 接口
-sk_key: "sk-dtthnofmucfiqxxxxxxxxxxxaeabcczckrwnoj"
-sk_url: "https://api.siliconflow.cn/v1"
-sk_model: "deepseek-ai/DeepSeek-V2.5"
+# 硅基流动接口
+SiliconCloud:
+  url: "https://api.siliconflow.cn/v1"
+  key: "sk-dtthnofxxxxxxxxxxxxxxxxxxxxxxxbcczckrwnoj"
+  model: "deepseek-ai/DeepSeek-V3"

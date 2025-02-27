@@ -23,12 +23,5 @@ def lolicon_setu(tag_list=None):
     return img, img_url, result
 
 
-def lizi_setu():
-    api = 'https://t.mwm.moe/mp'
-    resp = requests.get(api)
-    img_url = resp.url
-    return img_url
-
-
 if __name__ == '__main__':
     lolicon_setu(tag_list=['安可'])

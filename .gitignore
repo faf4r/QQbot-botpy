@@ -1,6 +1,8 @@
-./vscode/*
+.vscode/*
 venv/*
 config.yaml
 __pycache__/*
 plugins/__pycache__/*
 *.log
+*.log.*
+*.log-*

@@ -21,4 +21,9 @@
 - config.yaml：配置文件，包含机器人API的配置信息。
 - requirements.txt：依赖文件，列出了项目所需的Python库。
 
-你可以通过运行`bot.py`来启动这个机器人。确保在运行前配置好`config.yaml`文件，并安装`requirements.txt`中列出的依赖。
+# Usage
+你可以通过运行`bot.py`来启动这个机器人。确保在运行前配置好`config.yaml`文件(参照`example.config.yaml`创建`config.yaml`)，并安装`requirements.txt`中列出的依赖。
+
+# TODO
+- [ ] `plugins/chatbot.py`中的`_process_queue`存在问题，进行对话(即调用`chat`)时会出现`Task was destroyed but it is pending!`的报错，不过并不影响程序运行，不保证长久运行不出问题。
+- [ ] setu模块的异步请求
