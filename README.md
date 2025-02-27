@@ -15,7 +15,6 @@
 
 4. **系统状态监控**：
    - 获取服务器的CPU、内存和磁盘使用情况，使用`/status`命令。
-
 项目的主要文件和目录结构如下：
 - bot.py：主程序文件，包含机器人客户端的实现和消息处理逻辑。
 - plugins：插件目录，包含新闻获取、图片发送和聊天功能的实现。
@@ -23,7 +22,11 @@
 - requirements.txt：依赖文件，列出了项目所需的Python库。
 
 # Usage
-你可以通过运行`bot.py`来启动这个机器人。确保在运行前配置好`config.yaml`文件(参照`example.config.yaml`创建`config.yaml`)，并安装`requirements.txt`中列出的依赖。
+- 在QQ机器人开发平台配置沙箱、白名单等
+- 使用`pip install -r requirements.txt`安装`requirements.txt`中列出的依赖。
+- 配置好`config.yaml`文件(参照`example.config.yaml`创建`config.yaml`)
+- 使用`python3 bot.py`运行`bot.py`来启动这个机器人。
+- @机器人发送`/menu`获取菜单
 
 # TODO
 - [ ] `plugins/chatbot.py`中的`_process_queue`存在问题，进行对话(即调用`chat`)时会出现`Task was destroyed but it is pending!`的报错，不过并不影响程序运行，不保证长久运行不出问题。

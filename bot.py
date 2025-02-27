@@ -26,6 +26,18 @@ class MyClient(botpy.Client):
 
         if msg in ['/ping', 'ping', 'test']:
             return await message.reply(content="pong!")
+        
+        elif msg in ['/menu', 'menu', '菜单', '/help', 'help', '帮助', '命令']:
+            menu = "命令列表：\n" \
+                       "/ping:  测试机器人是否在线\n" \
+                       "/status:查询服务器状态\n" \
+                       "/jwc:   查询教务处通知\n" \
+                       "/xg:    查询学工处通知\n" \
+                       "/setu:  发送涩图(可加关键字，空格分隔)\n" \
+                       "/reset: 重置对话\n" \
+                       "/model: 切换对话模型(kimi/silicon)\n" \
+                       "/menu:  菜单\n"
+            return await message.reply(content=menu)
 
         elif msg in ['/status', '/状态', '状态', 'status']:
             status_msg = await get_status()
