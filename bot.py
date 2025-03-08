@@ -10,6 +10,7 @@ from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
 from plugins.setu import lolicon_setu
 from plugins.chatbot import ChatBot
+from utils import redirect
 
 logger = logging.get_logger()
 
@@ -26,7 +27,7 @@ class MyClient(botpy.Client):
 
         if msg in ['/ping', 'ping', 'test']:
             return await message.reply(content="pong!")
-        
+
         elif msg in ['/menu', 'menu', '菜单', '/help', 'help', '帮助', '命令']:
             menu = "命令列表：\n" \
                        "/ping:  测试机器人是否在线\n" \
@@ -56,7 +57,7 @@ class MyClient(botpy.Client):
             return await message.reply(content=xg_news, msg_seq=2)
 
         elif msg.lower().split()[0] in ['/setu', 'setu', '涩', '涩图', '涩涩', '色']:
-            await message.reply(content='请求中...', msg_seq=2)
+            await message.reply(content='请求中...', msg_seq=1)
             keywords = message.content.strip().split()
             if len(keywords) > 1:
                 tag_list = keywords[1:]
@@ -67,7 +68,7 @@ class MyClient(botpy.Client):
             logger.info(result)
             logger.info(img_url)
             if img_url is None:
-                return await message.reply(result['error'])
+                return await message.reply(result['error'], msg_seq=2)
             try:
                 media = await message._api.post_group_file(
                     group_openid=message.group_openid,
@@ -75,19 +76,28 @@ class MyClient(botpy.Client):
                     url=img_url
                 )
                 return await message.reply(
+                    msg_seq=2,
                     msg_type=7,
                     content="你要的涩图~",
                     media=media,
                 )
             except ServerError as e:
                 logger.info(f"ServerError: {str(e)}")
+                await message.reply(
+                    content=f"ServerError\n涩图发送失败了>.<", msg_seq=2
+                )
                 return await message.reply(
-                    content=f"ServerError\n涩图发送失败了>.<"
+                    content=f"请直接访问链接查看~：{redirect(img_url)}", msg_seq=3
                 )
             except Exception as e:
                 logger.info(e.__repr__())
                 logger.info(f"Exception type: {type(e).__name__}, Exception message: {str(e)}")
-                return await message.reply(content="未知错误：涩图发送失败>.<")
+                await message.reply(
+                    content=f"未知错误\n涩图发送失败了>.<", msg_seq=2
+                )
+                return await message.reply(
+                    content=f"请直接访问链接查看~：{redirect(img_url)}", msg_seq=3
+                )
 
         elif msg.lower().split()[0] in ['/reset', 'reset', '重置']:
             chatbot = self.chatbot_dict.setdefault(message.group_openid, ChatBot())
