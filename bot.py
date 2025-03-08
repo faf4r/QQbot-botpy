@@ -46,13 +46,13 @@ class MyClient(botpy.Client):
 
         elif msg.lower() in ['/jwc', 'jwc', '教务处', 'news', '通知']:
             await message.reply(content='查询中...', msg_seq=1)
-            jwc_news = jwc5news()
+            jwc_news = await jwc5news()
             logger.info(jwc_news)
             return await message.reply(content=jwc_news, msg_seq=2)
 
         elif msg.lower() in ['/xg', 'xg', '学工']:
             await message.reply(content='查询中...', msg_seq=1)
-            xg_news = xg5news()
+            xg_news = await xg5news()
             logger.info(xg_news)
             return await message.reply(content=xg_news, msg_seq=2)
 

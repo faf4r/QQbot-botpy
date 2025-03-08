@@ -1,14 +1,16 @@
-import requests
+import aiohttp
 from lxml import etree
 
 from utils import redirect  # 相对导入，utils与bot.py在同一目录下
 
 headers = {'User-Agent': 'Mozilla 5.0'}
 
-def jwc5news():
+async def jwc5news():
     jwc_url = 'http://jwc.swjtu.edu.cn/vatuu/WebAction?setAction=newsList'
-    resp = requests.get(url=jwc_url, headers=headers)
-    html = etree.HTML(resp.text)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(jwc_url, headers=headers) as resp:
+            html = await resp.text()
+    html = etree.HTML(html)
     items = html.xpath('/html/body/div[3]/div/div[1]/div')
     items = items[:5] if len(items) > 5 else items  # 仅展示最新5条消息
     msg = ""
@@ -18,14 +20,16 @@ def jwc5news():
         link = link.replace('../', 'http://jwc.swjtu.edu.cn/')
         link = redirect(link) # 过审
         date = item.xpath('p/span[1]/text()')[0]
-        msg += f'\n[{i+1}] ' + '\n'.join([title, date, link]) + '\n'
+        msg = f"\n[{i+1}] {'\n'.join([title, date, link])}\n{msg}"
     return msg
 
 
-def xg5news():
+async def xg5news():
     xg_url = 'http://xg.swjtu.edu.cn/web/Home/PushNewsList?Lmk7LJw34Jmu=010j.shtml'
-    resp = requests.get(url=xg_url, headers=headers)
-    html = etree.HTML(resp.text)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(xg_url, headers=headers) as resp:
+            html = await resp.text()
+    html = etree.HTML(html)
     items = html.xpath('/html/body/div[3]/div/div[2]/div[2]/ul/li')
     items = items[:5] if len(items) > 5 else items  # 仅展示最新5条消息
     msg = ""
@@ -35,7 +39,7 @@ def xg5news():
         link = 'http://xg.swjtu.edu.cn' + link
         link = redirect(link)  # 过审
         date = item.xpath('p/span[1]/text()')[0]
-        msg += f'\n[{i+1}] ' + '\n'.join([title, date, link]) + '\n'
+        msg = f"\n[{i+1}] {'\n'.join([title, date, link])}\n{msg}"
     return msg
 
 if __name__ == '__main__':
