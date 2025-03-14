@@ -3,9 +3,9 @@ appid: "10000000"
 secret: "2rgVKA0qkkxxx1exampledVNF7zsleX"
 
 # 重定向服务链接
-# 需要自己在机器人后台配置并验证，若不使用则留空
-# 若有则需注意末尾要带斜杠
-redirect_url: ""
+# 需要自己在机器人后台配置并验证
+# 需要填充url的地方使用{}留空，若不使用则赋值""
+redirect_url: "https://example.com/redirect?url={}"
 
 # kimiAPI
 kimi:
