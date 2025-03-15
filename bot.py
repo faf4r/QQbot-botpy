@@ -82,7 +82,7 @@ class MyClient(botpy.Client):
                     media=media,
                 )
             except ServerError as e:
-                logger.info(f"ServerError: {str(e)}")
+                logger.info(f"ServerError: {e.msgs}")
                 await message.reply(
                     content=f"ServerError\n涩图发送失败了>.<", msg_seq=2
                 )
