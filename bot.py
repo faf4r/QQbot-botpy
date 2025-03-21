@@ -8,17 +8,30 @@ from botpy.ext.cog_yaml import read
 
 from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
-from plugins.setu import lolicon_setu
+from plugins.setu import get_setu_api
 from plugins.chatbot import ChatBot
 from utils import redirect
 from utils import logger
 
 config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
+menu = """命令列表：
+/ping:  测试机器人是否在线
+/status:查询服务器状态
+/jwc:   查询教务处通知
+/xg:    查询学工处通知
+/setu:  发送涩图(可加关键字，空格分隔)
+/api:   切换涩图API
+/reset: 重置对话
+/model: 切换对话模型(kimi/silicon)
+/menu:  菜单
+"""
+
 
 class MyClient(botpy.Client):
     async def on_ready(self):
         self.chatbot_dict = {}  # 根据群组openid存储chatbot实例
+        self.setu_api = {}      # 根据群组openid存储涩图API
         logger.info(f"{self.robot.name} is on ready!")
 
     async def handle_msg(self, message: GroupMessage):
@@ -28,15 +41,6 @@ class MyClient(botpy.Client):
             return await message.reply(content="pong!")
 
         elif msg in ['/menu', 'menu', '菜单', '/help', 'help', '帮助', '命令']:
-            menu = "命令列表：\n" \
-                       "/ping:  测试机器人是否在线\n" \
-                       "/status:查询服务器状态\n" \
-                       "/jwc:   查询教务处通知\n" \
-                       "/xg:    查询学工处通知\n" \
-                       "/setu:  发送涩图(可加关键字，空格分隔)\n" \
-                       "/reset: 重置对话\n" \
-                       "/model: 切换对话模型(kimi/silicon)\n" \
-                       "/menu:  菜单\n"
             return await message.reply(content=menu)
 
         elif msg in ['/status', '/状态', '状态', 'status']:
@@ -55,6 +59,27 @@ class MyClient(botpy.Client):
             logger.info(xg_news)
             return await message.reply(content=xg_news, msg_seq=2)
 
+        elif msg.lower().split()[0] in ['/api', 'api']:
+            txt = msg.lower().split()[1:]
+            if not txt:
+                return await message.reply(
+                    content="请指定API名称：\n\tlolicon\n\tltp\n\审核"
+                )
+            name = txt[0]
+            if name in ["lolicon", "loli", "萝莉"]:
+                name = "lolicon"
+            elif name in ["ltp"]:
+                name = "ltp"
+            elif name in ["审核", "shenhe"]:
+                name = "shenhe"
+            else:
+                return await message.reply(
+                    content="目前支持的api有：lolicon, ltp, 审核"
+                )
+            self.setu_api[message.group_openid] = get_setu_api(name)
+            logger.info(f"已切换API为{name}")
+            return await message.reply(content=f"已切换API为{name}")
+
         elif msg.lower().split()[0] in ['/setu', 'setu', '涩', '涩图', '涩涩', '色']:
             await message.reply(content='请求中...', msg_seq=1)
             keywords = message.content.strip().split()
@@ -63,7 +88,8 @@ class MyClient(botpy.Client):
             else:
                 tag_list = None
             logger.debug('setu请求中...')
-            img, img_url, result = await lolicon_setu(tag_list=tag_list)
+            get_setu = self.setu_api.setdefault(message.group_openid, get_setu_api())
+            img, img_url, result = await get_setu(tag_list=tag_list)
             logger.debug(result)
             logger.info(img_url)
             if img_url is None:
