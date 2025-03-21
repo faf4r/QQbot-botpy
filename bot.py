@@ -11,8 +11,7 @@ from plugins.status import get_status
 from plugins.setu import lolicon_setu
 from plugins.chatbot import ChatBot
 from utils import redirect
-
-logger = logging.get_logger()
+from utils import logger
 
 config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
@@ -63,9 +62,9 @@ class MyClient(botpy.Client):
                 tag_list = keywords[1:]
             else:
                 tag_list = None
-            logger.info('请求中...')
+            logger.debug('setu请求中...')
             img, img_url, result = await lolicon_setu(tag_list=tag_list)
-            logger.info(result)
+            logger.debug(result)
             logger.info(img_url)
             if img_url is None:
                 return await message.reply(result['error'], msg_seq=2)
@@ -82,7 +81,7 @@ class MyClient(botpy.Client):
                     media=media,
                 )
             except ServerError as e:
-                logger.info(f"ServerError: {e.msgs}")
+                logger.warning(f"ServerError: {e.msgs}")
                 await message.reply(
                     content=f"ServerError\n涩图发送失败了>.<", msg_seq=2
                 )
@@ -90,8 +89,8 @@ class MyClient(botpy.Client):
                     content=f"请直接访问链接查看~：{redirect(img_url)}", msg_seq=3
                 )
             except Exception as e:
-                logger.info(e.__repr__())
-                logger.info(f"Exception type: {type(e).__name__}, Exception message: {str(e)}")
+                logger.error(e.__repr__())
+                logger.error(f"Exception type: {type(e).__name__}, Exception message: {str(e)}")
                 await message.reply(
                     content=f"未知错误\n涩图发送失败了>.<", msg_seq=2
                 )
@@ -153,5 +152,5 @@ class MyClient(botpy.Client):
 
 
 intents = botpy.Intents(public_messages=True, guild_messages=True)
-client = MyClient(intents=intents, is_sandbox=True)
+client = MyClient(intents=intents, is_sandbox=False)
 client.run(appid=config["appid"], secret=config["secret"])
