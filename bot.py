@@ -10,6 +10,7 @@ from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
 from plugins.setu import get_setu_api
 from plugins.chatbot import ChatBot
+from plugins.english_dict import EnglishDict
 from utils import redirect
 from utils import logger
 
@@ -18,6 +19,8 @@ config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
 menu = """命令列表：
 /ping:  测试机器人是否在线
 /status:查询服务器状态
+/记单词: [num] [tag]随机单词，默认1个KaoYan单词
+/单词tag:  列出记单词可用的tags
 /jwc:   查询教务处通知
 /xg:    查询学工处通知
 /setu:  发送涩图(可加关键字，空格分隔)
@@ -32,7 +35,14 @@ class MyClient(botpy.Client):
     async def on_ready(self):
         self.chatbot_dict = {}  # 根据群组openid存储chatbot实例
         self.setu_api = {}      # 根据群组openid存储涩图API
+        self.english = EnglishDict()
         logger.info(f"{self.robot.name} is on ready!")
+
+    async def close(self):
+        self.english.close()
+        for chatbot in self.chatbot_dict.values():
+            await chatbot.close()
+        return await super().close()
 
     async def handle_msg(self, message: GroupMessage):
         msg = message.content.strip()
@@ -46,6 +56,27 @@ class MyClient(botpy.Client):
         elif msg in ['/status', '/状态', '状态', 'status']:
             status_msg = await get_status()
             return await message.reply(content=status_msg)
+
+        elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
+            return await message.reply(content=self.english.list_tags())
+
+        elif msg.lower().split()[0] in ["/记单词", "记单词", "/单词", "单词"]:
+            if len(msg.split()) == 1:
+                content = self.english.random_word()
+            elif len(msg.split()) == 2:
+                arg = msg.split()[1]
+                if arg.isdigit():
+                    num = int(arg)
+                    content = self.english.random_word(num=num)
+                else:
+                    content = self.english.random_word(tag=arg)
+            elif len(msg.split()) == 3:
+                arg1, arg2 = msg.split()[1:]
+                num = int(arg1) if arg1.isdigit() else arg2
+                tag = arg1 if not arg1.isdigit() else arg2
+                content = self.english.random_word(num=num, tag=tag)
+            logger.info(content)
+            return await message.reply(content=content)
 
         elif msg.lower() in ['/jwc', 'jwc', '教务处', 'news', '通知']:
             await message.reply(content='查询中...', msg_seq=1)

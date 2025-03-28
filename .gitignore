@@ -7,3 +7,5 @@ plugins/__pycache__/*
 *.log.*
 *.log-*
 logs/*
+*.xlsx
+database/dict.db
