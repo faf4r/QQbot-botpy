@@ -35,8 +35,8 @@ print("done.")
 
 # step2 将数据写入数据库
 print("Writing to database ./database/dict.db...")
-conn = sqlite3.connect("dict.db")
-with open("dict_schema.sql", encoding="utf-8") as f:
+conn = sqlite3.connect("database/dict.db")
+with open("scripts/dict_schema.sql", encoding="utf-8") as f:
     conn.executescript(f.read())
     conn.commit()
 
@@ -91,7 +91,7 @@ start_t = time.perf_counter()
 files = os.listdir(tmp_dir)
 total_all = len(files)
 for cnt, filename in enumerate(files, 1):
-    filename = os.path.join("book_jsonl", filename)
+    filename = os.path.join(tmp_dir, filename)
     print(f"processing {cnt}/{total_all} : {filename}")
     with open(filename, "r", encoding="utf-8") as file:
         lines = file.readlines()
