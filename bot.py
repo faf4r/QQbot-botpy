@@ -6,20 +6,23 @@ from botpy.errors import ServerError
 from botpy import logging
 from botpy.ext.cog_yaml import read
 
+from utils import logger
+from utils import redirect, get_short_url
 from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
 from plugins.setu import get_setu_api
 from plugins.chatbot import ChatBot
 from plugins.english_dict import EnglishDict
-from utils import redirect
-from utils import logger
+from plugins.mianshiya import Mianshiya
 
 config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
 menu = """命令列表：
 /ping:  测试机器人是否在线
 /status:查询服务器状态
-/记单词: [num] [tag]随机单词，默认1个KaoYan单词
+/每日一题:  随机获取每日一题，每日4点更新
+/随机题: 随机一道面试鸭的题，可加参数选择方向
+/记单词: [num] [tag]随机单词，默认1个考研单词
 /单词tag:  列出记单词可用的tags
 /jwc:   查询教务处通知
 /xg:    查询学工处通知
@@ -36,10 +39,12 @@ class MyClient(botpy.Client):
         self.chatbot_dict = {}  # 根据群组openid存储chatbot实例
         self.setu_api = {}      # 根据群组openid存储涩图API
         self.english = EnglishDict()
+        self.mianshiya = Mianshiya()
         logger.info(f"{self.robot.name} is on ready!")
 
     async def close(self):
         self.english.close()
+        self.mianshiya.close()
         for chatbot in self.chatbot_dict.values():
             await chatbot.close()
         return await super().close()
@@ -56,7 +61,7 @@ class MyClient(botpy.Client):
         elif msg in ['/status', '/状态', '状态', 'status']:
             status_msg = await get_status()
             return await message.reply(content=status_msg)
-
+        
         elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
             return await message.reply(content=self.english.list_tags())
 
@@ -78,6 +83,26 @@ class MyClient(botpy.Client):
             logger.info(content)
             return await message.reply(content=content)
 
+        elif msg.lower().split()[0] in ['/随机题', '随机题']:
+            if len(msg.split()) == 1:
+                content = await self.mianshiya.random_question()
+            elif len(msg.split()) == 2:
+                tag = msg.split()[1]
+                try:
+                    content = await self.mianshiya.random_question(tag)
+                except ValueError as e:
+                    logger.error(repr(e))
+                    return await message.reply(content='参数异常')
+            else:
+                return await message.reply(content='参数过多')
+            if content is None:
+                return await message.reply(content='没有相关题目')
+            logger.info(content)
+            url, question = content.split('\n', 1)
+            url = await get_short_url(url)
+            content = f"{url}\n{question}"
+            return await message.reply(content=content)
+        
         elif msg.lower() in ['/jwc', 'jwc', '教务处', 'news', '通知']:
             await message.reply(content='查询中...', msg_seq=1)
             jwc_news = await jwc5news()
@@ -89,6 +114,9 @@ class MyClient(botpy.Client):
             xg_news = await xg5news()
             logger.info(xg_news)
             return await message.reply(content=xg_news, msg_seq=2)
+
+        elif msg.lower() in ['/ww', 'ww', '鸣潮']:
+            raise NotImplementedError('未实现')
 
         elif msg.lower().split()[0] in ['/api', 'api']:
             txt = msg.lower().split()[1:]

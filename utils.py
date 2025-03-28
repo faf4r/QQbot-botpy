@@ -3,13 +3,26 @@ from botpy.ext.cog_yaml import read
 
 config = read("config.yaml")
 
-
 # 鉴于QQ机器人的限制，无法直接发送链接，因此用备案过的链接进行重定向
 def redirect(url):
     redirect_url = config["redirect_url"]   # 备案过的域名，提供重定向服务
     if redirect_url:
         return redirect_url.format(quote(url))
     return url
+
+
+# 短链接服务
+import aiohttp
+async def get_short_url(original_url):
+    payload = {"url": original_url}
+    async with aiohttp.ClientSession() as session:
+        async with session.post("https://s.ltp.icu/code", json=payload) as resp:
+            if resp.status != 200:
+                raise Exception(f"短链接服务异常: code {resp.status}")
+            result = await resp.json()
+    if result["success"] != 0:
+        raise Exception(f"短链接服务异常: {result['message']}")
+    return result["short_url"]
 
 
 # 自定义日志文件路径
