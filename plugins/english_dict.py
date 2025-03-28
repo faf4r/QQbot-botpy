@@ -30,7 +30,9 @@ class EnglishDict:
         self.close()
 
     def close(self):
-        self.conn.close()
+        if self.conn is not None:
+            self.conn.close()
+        self.conn = None
 
     def random_word(self, num: int=1, tag: str="KaoYan"):
         cursor = self.conn.cursor()
