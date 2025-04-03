@@ -40,6 +40,7 @@ class MyClient(botpy.Client):
         self.setu_api = {}      # 根据群组openid存储涩图API
         self.english = EnglishDict()
         self.mianshiya = Mianshiya()
+        self.pending_word = {}  # 存储待回答的单词
         logger.info(f"{self.robot.name} is on ready!")
 
     async def close(self):
@@ -51,6 +52,8 @@ class MyClient(botpy.Client):
 
     async def handle_msg(self, message: GroupMessage):
         msg = message.content.strip()
+        group_id = message.group_openid
+        user_id = message.author.member_openid
 
         if msg in ['/ping', 'ping', 'test']:
             return await message.reply(content="pong!")
@@ -65,23 +68,46 @@ class MyClient(botpy.Client):
         elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
             return await message.reply(content=self.english.list_tags())
 
+        # elif msg.lower().split()[0] in ["/记单词", "记单词", "/单词", "单词"]:
+        #     if len(msg.split()) == 1:
+        #         content = self.english.random_word()
+        #     elif len(msg.split()) == 2:
+        #         arg = msg.split()[1]
+        #         if arg.isdigit():
+        #             num = int(arg)
+        #             content = self.english.random_word(num=num)
+        #         else:
+        #             content = self.english.random_word(tag=arg)
+        #     elif len(msg.split()) == 3:
+        #         arg1, arg2 = msg.split()[1:]
+        #         num = int(arg1) if arg1.isdigit() else arg2
+        #         tag = arg1 if not arg1.isdigit() else arg2
+        #         content = self.english.random_word(num=num, tag=tag)
+        #     logger.info(content)
+        #     return await message.reply(content=content)
         elif msg.lower().split()[0] in ["/记单词", "记单词", "/单词", "单词"]:
             if len(msg.split()) == 1:
-                content = self.english.random_word()
+                word, definition = self.english.get_word_with_definition()
+                possible_answers = self.english.get_possible_answers(definition)
+                self.pending_word.setdefault(group_id, {})[user_id] = (word, possible_answers)
+                content = f"写出对应单词：\n{definition}"
             elif len(msg.split()) == 2:
-                arg = msg.split()[1]
-                if arg.isdigit():
-                    num = int(arg)
-                    content = self.english.random_word(num=num)
-                else:
-                    content = self.english.random_word(tag=arg)
-            elif len(msg.split()) == 3:
-                arg1, arg2 = msg.split()[1:]
-                num = int(arg1) if arg1.isdigit() else arg2
-                tag = arg1 if not arg1.isdigit() else arg2
-                content = self.english.random_word(num=num, tag=tag)
+                tag = msg.split()[1]
+                word, definition = self.english.get_word_with_definition(tag=tag)
+                possible_answers = self.english.get_possible_answers(definition)
+                self.pending_word.setdefault(group_id, {})[user_id] = (word, possible_answers)
+                content = f"写出对应单词：\n{definition}"
             logger.info(content)
             return await message.reply(content=content)
+
+        elif group_id in self.pending_word and user_id in self.pending_word[group_id]:
+            word, possible_answers = self.pending_word[group_id].pop(user_id)
+            if msg.lower() == word.lower():
+                return await message.reply(content="回答正确！")
+            elif msg.lower() in [answer.lower() for answer in possible_answers]:
+                return await message.reply(content=f"同义词，目标单词是：{word}")
+            else:
+                return await message.reply(content=f"回答错误，正确答案是：{word}")
 
         elif msg.lower().split()[0] in ['/随机题', '随机题']:
             if len(msg.split()) == 1:
@@ -236,6 +262,6 @@ class MyClient(botpy.Client):
         logger.debug(msg_result)
 
 
-intents = botpy.Intents(public_messages=True, guild_messages=True)
+intents = botpy.Intents(public_messages=True, guild_messages=False)
 client = MyClient(intents=intents, is_sandbox=False)
 client.run(appid=config["appid"], secret=config["secret"])
