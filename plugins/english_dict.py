@@ -1,4 +1,5 @@
 import sqlite3
+import re
 
 
 class EnglishDict:
@@ -49,9 +50,34 @@ class EnglishDict:
     def list_tags(self):
         return self.tags
 
+    def get_word_with_definition(self, num: int = 1, tag: str = "KaoYan"):
+        cursor = self.conn.cursor()
+        cursor.execute(f'SELECT word, translation FROM words WHERE book LIKE "%{tag}%" ORDER BY RANDOM() LIMIT {num}')
+        result = cursor.fetchone()
+        cursor.close()
+        if not result:
+            return None, f"No words found for tag: {tag}"
+        word, definition = result
+        return word, definition
+
+    def get_possible_answers(self, definition: str):
+        match = re.compile(r'[\u4e00-\u9fa5]+')
+        CHNs = match.findall(definition)
+        possible_answers = set()
+        cursor = self.conn.cursor()
+        for CHN in CHNs:
+            cursor.execute(f'SELECT word FROM words WHERE translation LIKE "%{CHN}%"')
+            results = cursor.fetchall()
+            for result in results:
+                possible_answers.add(result[0])
+        cursor.close()
+        return list(possible_answers)
+
 
 if __name__ == "__main__":
     eng = EnglishDict()
     print(eng.list_tags())
     print(eng.random_word(3, "CET4"))
+    print(eng.get_word_with_definition(1, "KaoYan"))
+    print(eng.get_possible_answers("放弃"))
     eng.close()
