@@ -23,6 +23,7 @@ menu = """命令列表：
 /每日一题:  随机获取每日一题，每日4点更新
 /随机题: 随机一道面试鸭的题，可加参数选择方向
 /记单词: [num] [tag]随机单词，默认1个考研单词
+/exam: [tag] 随机单词测验，默认考研单词
 /单词tag:  列出记单词可用的tags
 /jwc:   查询教务处通知
 /xg:    查询学工处通知
@@ -68,24 +69,24 @@ class MyClient(botpy.Client):
         elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
             return await message.reply(content=self.english.list_tags())
 
-        # elif msg.lower().split()[0] in ["/记单词", "记单词", "/单词", "单词"]:
-        #     if len(msg.split()) == 1:
-        #         content = self.english.random_word()
-        #     elif len(msg.split()) == 2:
-        #         arg = msg.split()[1]
-        #         if arg.isdigit():
-        #             num = int(arg)
-        #             content = self.english.random_word(num=num)
-        #         else:
-        #             content = self.english.random_word(tag=arg)
-        #     elif len(msg.split()) == 3:
-        #         arg1, arg2 = msg.split()[1:]
-        #         num = int(arg1) if arg1.isdigit() else arg2
-        #         tag = arg1 if not arg1.isdigit() else arg2
-        #         content = self.english.random_word(num=num, tag=tag)
-        #     logger.info(content)
-        #     return await message.reply(content=content)
         elif msg.lower().split()[0] in ["/记单词", "记单词", "/单词", "单词"]:
+            if len(msg.split()) == 1:
+                content = self.english.random_word()
+            elif len(msg.split()) == 2:
+                arg = msg.split()[1]
+                if arg.isdigit():
+                    num = int(arg)
+                    content = self.english.random_word(num=num)
+                else:
+                    content = self.english.random_word(tag=arg)
+            elif len(msg.split()) == 3:
+                arg1, arg2 = msg.split()[1:]
+                num = int(arg1) if arg1.isdigit() else arg2
+                tag = arg1 if not arg1.isdigit() else arg2
+                content = self.english.random_word(num=num, tag=tag)
+            logger.info(content)
+            return await message.reply(content=content)
+        elif msg.lower().split()[0] in ["/exam", "exam", "/测验", "测验"]:
             if len(msg.split()) == 1:
                 word, definition = self.english.get_word_with_definition()
                 possible_answers = self.english.get_possible_answers(definition)
