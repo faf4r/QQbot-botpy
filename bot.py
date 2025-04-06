@@ -7,7 +7,8 @@ from botpy import logging
 from botpy.ext.cog_yaml import read
 
 from utils import logger
-from utils import redirect, get_short_url
+from utils import redirect, get_short_url, post_group_file, post_c2c_file, encode_data
+from types import MethodType  # 用于绑定方法到api实例上(不用这个参数要传self.api)
 from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
 from plugins.setu import get_setu_api
@@ -40,6 +41,8 @@ class MyClient(botpy.Client):
         self.setu_api = {}      # 根据群组openid存储涩图API
         self.english = EnglishDict()
         self.mianshiya = Mianshiya()
+        self.api.post_group_b64file = MethodType(post_group_file, self.api)
+        self.api.post_c2c_b64file = MethodType(post_c2c_file, self.api)
         logger.info(f"{self.robot.name} is on ready!")
 
     async def close(self):
@@ -120,10 +123,12 @@ class MyClient(botpy.Client):
 
         elif msg.lower() in ['哒哒啦', "哒哒啦啦", '哒哒', '哒哒啦啦', "/哒哒啦"]:
             try:
-                media = await message._api.post_group_file(
+                with open('夏空.silk', 'rb') as f:
+                    data = f.read()
+                media = await message._api.post_group_b64file(
                     group_openid=message.group_openid,
                     file_type=3,
-                    url="https://qqbot.ltp.icu/xiakong.silk",
+                    file_data=encode_data(data),
                 )
                 await message.reply(
                     content="你说的对，但是",
