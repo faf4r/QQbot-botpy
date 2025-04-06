@@ -24,6 +24,7 @@ menu = """命令列表：
 /随机题: 随机一道面试鸭的题，可加参数选择方向
 /记单词: [num] [tag]随机单词，默认1个考研单词
 /exam: [tag] 随机单词测验，默认考研单词
+/answer: [word] 回答单词测验
 /单词tag:  列出记单词可用的tags
 /jwc:   查询教务处通知
 /xg:    查询学工处通知
@@ -65,7 +66,7 @@ class MyClient(botpy.Client):
         elif msg in ['/status', '/状态', '状态', 'status']:
             status_msg = await get_status()
             return await message.reply(content=status_msg)
-
+        
         elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
             return await message.reply(content=self.english.list_tags())
 
@@ -94,6 +95,8 @@ class MyClient(botpy.Client):
                 content = f"写出对应单词：\n{definition}"
             elif len(msg.split()) == 2:
                 tag = msg.split()[1]
+                if tag not in self.english.list_tags():
+                    return await message.reply(content=f"tag{tag}无效，请对照/单词tag查看可用tag")
                 word, definition = self.english.get_word_with_definition(tag=tag)
                 possible_answers = self.english.get_possible_answers(definition)
                 self.pending_word.setdefault(group_id, {})[user_id] = (word, possible_answers)
@@ -101,11 +104,14 @@ class MyClient(botpy.Client):
             logger.info(content)
             return await message.reply(content=content)
 
-        elif group_id in self.pending_word and user_id in self.pending_word[group_id]:
+        elif msg.lower().split()[0] in ["/answer", "answer", "/回答", "回答"] and user_id in self.pending_word[group_id]:
+            if len(msg.split()) == 1:
+                return await message.reply(content="请输入单词")
+            usr_answer = msg.split()[1].lower()
             word, possible_answers = self.pending_word[group_id].pop(user_id)
-            if msg.lower() == word.lower():
+            if usr_answer == word.lower():
                 return await message.reply(content="回答正确！")
-            elif msg.lower() in [answer.lower() for answer in possible_answers]:
+            elif usr_answer in possible_answers:
                 return await message.reply(content=f"同义词，目标单词是：{word}")
             else:
                 return await message.reply(content=f"回答错误，正确答案是：{word}")
@@ -129,7 +135,7 @@ class MyClient(botpy.Client):
             url = await get_short_url(url)
             content = f"{url}\n{question}"
             return await message.reply(content=content)
-
+        
         elif msg.lower() in ['/jwc', 'jwc', '教务处', 'news', '通知']:
             await message.reply(content='查询中...', msg_seq=1)
             jwc_news = await jwc5news()
@@ -144,25 +150,6 @@ class MyClient(botpy.Client):
 
         elif msg.lower() in ['/ww', 'ww', '鸣潮']:
             raise NotImplementedError('未实现')
-
-        elif msg.lower() in ['哒哒啦', "哒哒啦啦", '哒哒', '哒哒啦啦', "/哒哒啦"]:
-            try:
-                media = await message._api.post_group_file(
-                    group_openid=message.group_openid,
-                    file_type=3,
-                    url="https://qqbot.ltp.icu/xiakong.silk",
-                )
-                await message.reply(
-                    content="你说的对，但是",
-                    msg_seq=2,
-                )
-                return await message.reply(
-                    msg_type=7,
-                    msg_seq=3,
-                    media=media,
-                )
-            except ServerError as e:
-                logger.warning(f"ServerError: {e.msgs}")
 
         elif msg.lower().split()[0] in ['/api', 'api']:
             txt = msg.lower().split()[1:]
