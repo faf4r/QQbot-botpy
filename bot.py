@@ -104,7 +104,9 @@ class MyClient(botpy.Client):
             logger.info(content)
             return await message.reply(content=content)
 
-        elif msg.lower().split()[0] in ["/answer", "answer", "/回答", "回答"] and user_id in self.pending_word[group_id]:
+        elif msg.lower().split()[0] in ["/answer", "answer", "/回答", "回答"]:
+            if group_id not in self.pending_word or user_id not in self.pending_word[group_id]:
+                return await message.reply(content="没有待回答的单词，使用/exam获取待测单词")
             if len(msg.split()) == 1:
                 return await message.reply(content="请输入单词")
             usr_answer = msg.split()[1].lower()
