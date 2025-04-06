@@ -65,7 +65,7 @@ class MyClient(botpy.Client):
         elif msg in ['/status', '/状态', '状态', 'status']:
             status_msg = await get_status()
             return await message.reply(content=status_msg)
-        
+
         elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
             return await message.reply(content=self.english.list_tags())
 
@@ -129,7 +129,7 @@ class MyClient(botpy.Client):
             url = await get_short_url(url)
             content = f"{url}\n{question}"
             return await message.reply(content=content)
-        
+
         elif msg.lower() in ['/jwc', 'jwc', '教务处', 'news', '通知']:
             await message.reply(content='查询中...', msg_seq=1)
             jwc_news = await jwc5news()
@@ -144,6 +144,25 @@ class MyClient(botpy.Client):
 
         elif msg.lower() in ['/ww', 'ww', '鸣潮']:
             raise NotImplementedError('未实现')
+
+        elif msg.lower() in ['哒哒啦', "哒哒啦啦", '哒哒', '哒哒啦啦', "/哒哒啦"]:
+            try:
+                media = await message._api.post_group_file(
+                    group_openid=message.group_openid,
+                    file_type=3,
+                    url="https://qqbot.ltp.icu/xiakong.silk",
+                )
+                await message.reply(
+                    content="你说的对，但是",
+                    msg_seq=2,
+                )
+                return await message.reply(
+                    msg_type=7,
+                    msg_seq=3,
+                    media=media,
+                )
+            except ServerError as e:
+                logger.warning(f"ServerError: {e.msgs}")
 
         elif msg.lower().split()[0] in ['/api', 'api']:
             txt = msg.lower().split()[1:]
