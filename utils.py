@@ -3,20 +3,13 @@ from botpy.ext.cog_yaml import read
 
 config = read("config.yaml")
 
-# 鉴于QQ机器人的限制，无法直接发送链接，因此用备案过的链接进行重定向
-def redirect(url):
-    redirect_url = config["redirect_url"]   # 备案过的域名，提供重定向服务
-    if redirect_url:
-        return redirect_url.format(quote(url))
-    return url
-
-
 # 短链接服务
+# 鉴于QQ机器人的限制，无法直接发送链接，因此用备案过的链接进行重定向
 import aiohttp
 async def get_short_url(original_url):
-    payload = {"url": original_url}
+    payload = {config["payload_field"]: original_url}
     async with aiohttp.ClientSession() as session:
-        async with session.post("https://s.ltp.icu/code", json=payload) as resp:
+        async with session.post(config["short_url"], json=payload) as resp:
             if resp.status != 200:
                 raise Exception(f"短链接服务异常: code {resp.status}")
             result = await resp.json()
@@ -101,8 +94,9 @@ async def post_c2c_file(
 
 
 from base64 import b64encode
+from io import BytesIO
 
-def encode_data(data: bytes | str) -> str:
+def encode_data(data: bytes | BytesIO | str) -> str:
     """
     对数据进行 Base64 编码
     :param data: 要编码的数据，可以是字节串或字符串
@@ -110,4 +104,6 @@ def encode_data(data: bytes | str) -> str:
     """
     if isinstance(data, str):
         data = data.encode("utf-8")
+    elif isinstance(data, BytesIO):
+        data = data.getvalue()
     return b64encode(data).decode()

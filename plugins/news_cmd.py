@@ -1,7 +1,7 @@
 import aiohttp
 from lxml import etree
 
-from utils import redirect  # 相对导入，utils与bot.py在同一目录下
+from utils import get_short_url  # 相对导入，utils与bot.py在同一目录下
 
 headers = {'User-Agent': 'Mozilla 5.0'}
 
@@ -18,7 +18,7 @@ async def jwc5news():
         title = item.xpath('h3/a/text()')[0]
         link = item.xpath('h3/a/@href')[0]
         link = link.replace('../', 'http://jwc.swjtu.edu.cn/')
-        link = redirect(link) # 过审
+        link = await get_short_url(link) # 过审
         date = item.xpath('p/span[1]/text()')[0]
         msg = f"\n[{i+1}] {'\n'.join([title, date, link])}\n{msg}"
     return msg
@@ -37,7 +37,7 @@ async def xg5news():
         title = item.xpath('h4/a/text()')[0]
         link = item.xpath('h4/a/@href')[0]
         link = 'http://xg.swjtu.edu.cn' + link
-        link = redirect(link)  # 过审
+        link = await get_short_url(link)  # 过审
         date = item.xpath('p/span[1]/text()')[0]
         msg = f"\n[{i+1}] {'\n'.join([title, date, link])}\n{msg}"
     return msg

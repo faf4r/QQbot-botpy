@@ -2,10 +2,11 @@
 appid: "10000000"
 secret: "2rgVKA0qkkxxx1exampledVNF7zsleX"
 
-# 重定向服务链接
-# 需要自己在机器人后台配置并验证
-# 需要填充url的地方使用{}留空，若不使用则赋值""
-redirect_url: "https://example.com/redirect?url={}"
+# 短链接服务配置(实现详见utils.py)
+# 域名需要自己在机器人后台配置并验证
+short_url: "https://example.com/code"
+payload_field: "url"  # payload参数的字段名
+
 
 # kimiAPI
 kimi:

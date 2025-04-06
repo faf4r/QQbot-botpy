@@ -7,7 +7,7 @@ from botpy import logging
 from botpy.ext.cog_yaml import read
 
 from utils import logger
-from utils import redirect, get_short_url, post_group_file, post_c2c_file, encode_data
+from utils import get_short_url, post_group_file, post_c2c_file, encode_data
 from types import MethodType  # 用于绑定方法到api实例上(不用这个参数要传self.api)
 from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
@@ -211,12 +211,15 @@ class MyClient(botpy.Client):
             logger.debug(result)
             logger.info(img_url)
             if img_url is None:
-                return await message.reply(result['error'], msg_seq=2)
+                if result.get('error') == 'status error':
+                    return await message.reply(content="图片404，请重新请求>.<", msg_seq=2)
+                else:
+                    return await message.reply(content="找不到相关的图片>.<", msg_seq=2)
             try:
-                media = await message._api.post_group_file(
+                media = await message._api.post_group_b64file(
                     group_openid=message.group_openid,
                     file_type=1,
-                    url=img_url
+                    file_data=encode_data(img)
                 )
                 return await message.reply(
                     msg_seq=2,
@@ -230,7 +233,7 @@ class MyClient(botpy.Client):
                     content=f"ServerError\n涩图发送失败了>.<", msg_seq=2
                 )
                 return await message.reply(
-                    content=f"请直接访问链接查看~：{redirect(img_url)}", msg_seq=3
+                    content=f"请直接访问链接查看~：{await get_short_url(img_url)}", msg_seq=3
                 )
             except Exception as e:
                 logger.error(e.__repr__())
@@ -239,7 +242,7 @@ class MyClient(botpy.Client):
                     content=f"未知错误\n涩图发送失败了>.<", msg_seq=2
                 )
                 return await message.reply(
-                    content=f"请直接访问链接查看~：{redirect(img_url)}", msg_seq=3
+                    content=f"请直接访问链接查看~：{await get_short_url(img_url)}", msg_seq=3
                 )
 
         elif msg.lower().split()[0] in ['/reset', 'reset', '重置']:
