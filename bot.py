@@ -7,7 +7,7 @@ from botpy import logging
 from botpy.ext.cog_yaml import read
 
 from utils import logger
-from utils import get_short_url, post_group_file, post_c2c_file, encode_data
+from utils import get_short_url, post_group_file, post_c2c_file, encode_data, get_content_link
 from types import MethodType  # 用于绑定方法到api实例上(不用这个参数要传self.api)
 from plugins.news_cmd import jwc5news, xg5news
 from plugins.status import get_status
@@ -69,7 +69,7 @@ class MyClient(botpy.Client):
         elif msg in ['/status', '/状态', '状态', 'status']:
             status_msg = await get_status()
             return await message.reply(content=status_msg)
-        
+
         elif msg.lower().split()[0] in ["/单词tag", "单词tag"]:
             return await message.reply(content=self.english.list_tags())
 
@@ -140,7 +140,7 @@ class MyClient(botpy.Client):
             url = await get_short_url(url)
             content = f"{url}\n{question}"
             return await message.reply(content=content)
-        
+
         elif msg.lower() in ['/jwc', 'jwc', '教务处', 'news', '通知']:
             await message.reply(content='查询中...', msg_seq=1)
             jwc_news = await jwc5news()
@@ -156,7 +156,7 @@ class MyClient(botpy.Client):
         elif msg.lower() in ['/ww', 'ww', '鸣潮']:
             raise NotImplementedError('未实现')
 
-        elif msg.lower() in ['哒哒啦', "哒哒啦啦", '哒哒', '哒哒啦啦', "/哒哒啦"]:
+        elif msg.lower() in ["哒哒啦", "哒啦哒", "哒哒", "哒哒啦啦", "哒", "哒啦"]:
             try:
                 with open('夏空.silk', 'rb') as f:
                     data = f.read()
@@ -178,21 +178,21 @@ class MyClient(botpy.Client):
                 logger.warning(f"ServerError: {e.msgs}")
 
         elif msg.lower().split()[0] in ['/api', 'api']:
-            txt = msg.lower().split()[1:]
+            txt = msg.lower().split(1)[1:]
             if not txt:
                 return await message.reply(
-                    content="请指定API名称：\n\tlolicon\n\tltp\n\审核"
+                    content="请指定API名称：\n\tlolicon\n\tno ai\n\t审核"
                 )
             name = txt[0]
             if name in ["lolicon", "loli", "萝莉"]:
                 name = "lolicon"
-            elif name in ["ltp"]:
-                name = "ltp"
+            elif name in ["noai", "no ai", "无ai", "lolicon_noAI"]:
+                name = "lolicon_noAI"
             elif name in ["审核", "shenhe"]:
                 name = "shenhe"
             else:
                 return await message.reply(
-                    content="目前支持的api有：lolicon, ltp, 审核"
+                    content="目前支持的api有：lolicon, no ai, 审核"
                 )
             self.setu_api[message.group_openid] = get_setu_api(name)
             logger.info(f"已切换API为{name}")
@@ -232,18 +232,26 @@ class MyClient(botpy.Client):
                 await message.reply(
                     content=f"ServerError\n涩图发送失败了>.<", msg_seq=2
                 )
+                # await message.reply(
+                #     content=f"请直接访问链接查看~：{await get_short_url(img_url)}", msg_seq=3
+                # )
+                cache_link = await get_content_link(img, file_type=1)
+                logger.info(f"转为消息链接：{cache_link}")
                 return await message.reply(
-                    content=f"请直接访问链接查看~：{await get_short_url(img_url)}", msg_seq=3
-                )
+                    content=f"请直接访问链接查看：{cache_link}", msg_seq=4)
             except Exception as e:
                 logger.error(e.__repr__())
                 logger.error(f"Exception type: {type(e).__name__}, Exception message: {str(e)}")
                 await message.reply(
                     content=f"未知错误\n涩图发送失败了>.<", msg_seq=2
                 )
+                # await message.reply(
+                #     content=f"请直接访问链接查看~：{await get_short_url(img_url)}", msg_seq=3
+                # )
+                cache_link = await get_content_link(img, file_type=1)
+                logger.info(f"转为消息链接：{cache_link}")
                 return await message.reply(
-                    content=f"请直接访问链接查看~：{await get_short_url(img_url)}", msg_seq=3
-                )
+                    content=f"请直接访问链接查看：{cache_link}", msg_seq=4)
 
         elif msg.lower().split()[0] in ['/reset', 'reset', '重置']:
             chatbot = self.chatbot_dict.setdefault(message.group_openid, ChatBot())
@@ -279,7 +287,14 @@ class MyClient(botpy.Client):
             result = await chatbot.chat(msg)
             logger.info(result)
             logger.debug(chatbot.history)
-            return await message.reply(content=result)
+            try:
+                return await message.reply(content=result)
+            except ServerError as e:
+                await message.reply(content="消息发送失败了")
+                logger.warning(f"ServerError: {e.msgs}")
+                link = await get_content_link(result, file_type=4)
+                logger.info(f"转为消息链接：{link}")
+                return await message.reply(content=f"请访问链接查看：{link}", msg_seq=2)
 
     async def on_group_at_message_create(self, message: GroupMessage):
         """

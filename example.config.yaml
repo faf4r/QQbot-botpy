@@ -7,6 +7,8 @@ secret: "2rgVKA0qkkxxx1exampledVNF7zsleX"
 short_url: "https://example.com/code"
 payload_field: "url"  # payload参数的字段名
 
+# 内容上传服务，用于QQ发送失败后发送链接
+content_upload: "https://example.com/upload"  # 上传内容的接口
 
 # kimiAPI
 kimi:

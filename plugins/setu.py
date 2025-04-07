@@ -6,7 +6,7 @@ async def lolicon_setu(tag_list=None):
     """
     根据tag进行请求获取图片，返回图片BytesIO, 图片链接, 原始请求结果
     """
-    api = "https://api.lolicon.app/setu/v2?size=regular&excludeAI=true"
+    api = "https://api.lolicon.app/setu/v2?size=regular"
     if tag_list is not None:
         api = api + '&' + '&'.join(f"tag={s}" for s in tag_list)
     async with aiohttp.ClientSession() as session:
@@ -22,11 +22,11 @@ async def lolicon_setu(tag_list=None):
         return img, img_url, result
 
 
-async def ltp_setu(tag_list=None):
+async def lolicon_noAI_setu(tag_list=None):
     """
-    根据tag进行请求获取图片，返回图片BytesIO, 图片链接, 原始请求结果
+    因setu上传策略变动，该方法已不需要了，直接作为排除AI的lolicon API
     """
-    api = "https://qqbot.ltp.icu/api/lolicon?size=regular&excludeAI=true"
+    api = "https://api.lolicon.app/setu/v2?size=regular&excludeAI=true"
     if tag_list is not None:
         api = api + "&" + "&".join(f"tag={s}" for s in tag_list)
     async with aiohttp.ClientSession() as session:
@@ -36,6 +36,8 @@ async def ltp_setu(tag_list=None):
             return None, None, result
         img_url = result["data"][0]["urls"]["regular"]
         async with session.get(img_url) as resp:
+            if resp.status != 200:
+                return None, None, {"error": "status error", "result": result}
             img = BytesIO(await resp.read())
         return img, img_url, result
 
@@ -57,8 +59,8 @@ def get_setu_api(name=None):
         return lolicon_setu
     if name == 'lolicon':
         return lolicon_setu
-    elif name == 'ltp':
-        return ltp_setu
+    elif name == "lolicon_noAI":
+        return lolicon_noAI_setu
     elif name == 'shenhe':
         return shenhe_setu
     else:

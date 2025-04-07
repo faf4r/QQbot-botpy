@@ -107,3 +107,26 @@ def encode_data(data: bytes | BytesIO | str) -> str:
     elif isinstance(data, BytesIO):
         data = data.getvalue()
     return b64encode(data).decode()
+
+
+async def get_content_link(content: bytes | BytesIO | str, file_type: int) -> str:
+    """
+    因内容被QQ拦截等原因发不出去，改为将内容上传服务器，获取链接进行访问
+    :param content: 要获取链接的内容，可以是字符串或字节串
+    :param file_type: 媒体类型：1 图片png/jpg，2 视频mp4，3 语音mp3，4 文本txt
+    :return: 返回的链接
+    """
+    if isinstance(content, str):
+        content = content.encode("utf-8")
+    elif isinstance(content, BytesIO):
+        content = content.getvalue()
+    content = b64encode(content).decode()
+    payload = locals()
+    async with aiohttp.ClientSession() as session:
+        async with session.post(config["content_upload"], json=payload) as resp:
+            if resp.status != 200:
+                raise Exception(f"文件上传服务异常: code {resp.status}")
+            result = await resp.json()
+    if result["success"] != 0:
+        raise Exception(f"文件上传服务异常: {result['message']}")
+    return result["url"]
