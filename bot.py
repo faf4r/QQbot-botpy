@@ -178,7 +178,7 @@ class MyClient(botpy.Client):
                 logger.warning(f"ServerError: {e.msgs}")
 
         elif msg.lower().split()[0] in ['/api', 'api']:
-            txt = msg.lower().split(1)[1:]
+            txt = msg.lower().split(' ', 1)[1:]
             if not txt:
                 return await message.reply(
                     content="请指定API名称：\n\tlolicon\n\tno ai\n\t审核"
