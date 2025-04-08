@@ -15,6 +15,7 @@ from plugins.setu import get_setu_api
 from plugins.chatbot import ChatBot
 from plugins.english_dict import EnglishDict
 from plugins.mianshiya import Mianshiya
+from plugins.koyso import latest_games, search_games
 
 config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
@@ -120,6 +121,15 @@ class MyClient(botpy.Client):
                 return await message.reply(content=f"同义词，目标单词是：{word}")
             else:
                 return await message.reply(content=f"回答错误，正确答案是：{word}")
+
+        elif msg.lower().split()[0] in ["/koyso", "koyso"]:
+            if len(msg.split()) == 1:
+                content = latest_games()
+            elif len(msg.split()) == 2:
+                game_name = msg.split()[1]
+                content = search_games(game_name)
+            logger.info(content)
+            return await message.reply(content=content)
 
         elif msg.lower().split()[0] in ['/随机题', '随机题']:
             if len(msg.split()) == 1:
