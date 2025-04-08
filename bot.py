@@ -125,10 +125,10 @@ class MyClient(botpy.Client):
 
         elif msg.lower().split()[0] in ["/koyso", "koyso"]:
             if len(msg.split()) == 1:
-                content = latest_games()
+                content = await latest_games()
             elif len(msg.split()) == 2:
                 game_name = msg.split()[1]
-                content = search_games(game_name)
+                content = await search_games(game_name)
             logger.info(content)
             return await message.reply(content=content)
 
