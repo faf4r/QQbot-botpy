@@ -3,3 +3,4 @@ psutil
 requests
 lxml
 openai
+aiohttp

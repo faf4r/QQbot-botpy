@@ -15,6 +15,7 @@ from plugins.setu import get_setu_api
 from plugins.chatbot import ChatBot
 from plugins.english_dict import EnglishDict
 from plugins.mianshiya import Mianshiya
+from plugins.koyso import latest_games, search_games
 
 config = read(os.path.join(os.path.dirname(__file__), "config.yaml"))
 
@@ -27,6 +28,7 @@ menu = """命令列表：
 /exam: [tag] 随机单词测验，默认考研单词
 /answer: [word] 回答单词测验
 /单词tag:  列出记单词可用的tags
+/koyso: [game_name] 查询最新10个游戏，或搜索指定游戏
 /jwc:   查询教务处通知
 /xg:    查询学工处通知
 /setu:  发送涩图(可加关键字，空格分隔)
@@ -120,6 +122,15 @@ class MyClient(botpy.Client):
                 return await message.reply(content=f"同义词，目标单词是：{word}")
             else:
                 return await message.reply(content=f"回答错误，正确答案是：{word}")
+
+        elif msg.lower().split()[0] in ["/koyso", "koyso"]:
+            if len(msg.split()) == 1:
+                content = await latest_games()
+            elif len(msg.split()) == 2:
+                game_name = msg.split()[1]
+                content = await search_games(game_name)
+            logger.info(content)
+            return await message.reply(content=content)
 
         elif msg.lower().split()[0] in ['/随机题', '随机题']:
             if len(msg.split()) == 1:
