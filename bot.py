@@ -130,7 +130,14 @@ class MyClient(botpy.Client):
                 game_name = msg.split()[1]
                 content = await search_games(game_name)
             logger.info(content)
-            return await message.reply(content=content)
+            try:
+                return await message.reply(content=content)
+            except ServerError as e:
+                await message.reply(content="消息发送失败了")
+                logger.warning(f"ServerError: {e.msgs}")
+                link = await get_content_link(content, file_type=4)
+                logger.info(f"转为消息链接：{link}")
+                return await message.reply(content=f"请访问链接查看：{link}", msg_seq=2)
 
         elif msg.lower().split()[0] in ['/随机题', '随机题']:
             if len(msg.split()) == 1:
