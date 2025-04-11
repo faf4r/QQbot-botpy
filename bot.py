@@ -204,6 +204,7 @@ class MyClient(botpy.Client):
         elif msg.lower() in ["鸣潮的小曲", "/鸣潮的小曲", "小曲"]:
             try:
                 fp = random.choice(self.wwmusic)
+                logger.info(fp)
                 with open(fp, 'rb') as f:
                     data = f.read()
                 title = fp.rsplit('/', 1)[-1].rstrip('.silk')
