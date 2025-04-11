@@ -1,9 +1,9 @@
 import os
+import random
 
 import botpy
 from botpy.message import GroupMessage
 from botpy.errors import ServerError
-from botpy import logging
 from botpy.ext.cog_yaml import read
 
 from utils import logger
@@ -29,6 +29,7 @@ menu = """命令列表：
 /answer: [word] 回答单词测验
 /单词tag:  列出记单词可用的tags
 /koyso: [game_name] 查询最新10个游戏，或搜索指定游戏
+/鸣潮的小曲: 随机来点鸣潮音乐
 /jwc:   查询教务处通知
 /xg:    查询学工处通知
 /setu:  发送涩图(可加关键字，空格分隔)
@@ -46,6 +47,7 @@ class MyClient(botpy.Client):
         self.english = EnglishDict()
         self.mianshiya = Mianshiya()
         self.pending_word = {}  # 存储待回答的单词
+        self.wwmusic = [os.path.join('./database/wwmusic/', file) for file in os.listdir('./database/wwmusic/')]
         self.api.post_group_b64file = MethodType(post_group_file, self.api)
         self.api.post_c2c_b64file = MethodType(post_c2c_file, self.api)
         logger.info(f"{self.robot.name} is on ready!")
@@ -176,7 +178,11 @@ class MyClient(botpy.Client):
 
         elif msg.lower() in ["哒哒啦", "哒啦哒", "哒哒", "哒哒啦啦", "哒", "哒啦"]:
             try:
-                with open('夏空.silk', 'rb') as f:
+                li = [
+                    "./database/wwmusic/你说得对，但是.silk",
+                    "./database/wwmusic/你说得对，但是 .silk",
+                ]
+                with open(random.choice(li), 'rb') as f:
                     data = f.read()
                 media = await message._api.post_group_b64file(
                     group_openid=message.group_openid,
@@ -194,6 +200,30 @@ class MyClient(botpy.Client):
                 )
             except ServerError as e:
                 logger.warning(f"ServerError: {e.msgs}")
+
+        elif msg.lower() in ["鸣潮的小曲", "/鸣潮的小曲", "小曲"]:
+            try:
+                fp = random.choice(self.wwmusic)
+                with open(fp, 'rb') as f:
+                    data = f.read()
+                title = fp.rsplit('/', 1)[-1].rstrip('.silk')
+                media = await message._api.post_group_b64file(
+                    group_openid=message.group_openid,
+                    file_type=3,
+                    file_data=encode_data(data),
+                )
+                await message.reply(
+                    content=title,
+                    msg_seq=2,
+                )
+                return await message.reply(
+                    msg_type=7,
+                    msg_seq=3,
+                    media=media,
+                )
+            except ServerError as e:
+                logger.warning(f"ServerError: {e.msgs}")
+                await message.reply(content="消息发送失败")
 
         elif msg.lower().split()[0] in ['/api', 'api']:
             txt = msg.lower().split(' ', 1)[1:]
