@@ -27,10 +27,9 @@ class MyClient(botpy.Client):
                     logger.error(f"Failed to load {module_name}: {e}")
 
         logger.info(f"Loaded call_name results: {self.call_name_dict}")
-        logger.info(f"{self.robot.name} is on ready!")
-
 
     async def handle_msg(self, message: GroupMessage):
+
         call_word = message.content.strip().lower().split()[0]
         for module_name, call_names in self.call_name_dict.items():
             if call_word in call_names:
@@ -39,8 +38,6 @@ class MyClient(botpy.Client):
                     return await module.botio(message, self.info, self.api)
         module = importlib.import_module("plugins.chatbot")
         return await module.botio(message, self.info, self.api)
-
-
 
     async def on_group_at_message_create(self, message: GroupMessage):
         """
