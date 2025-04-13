@@ -3,6 +3,15 @@ import asyncio
 import psutil
 
 
+def call_name():
+    return ['/status', '/状态', '状态', 'status']
+
+
+async def botio(message, info, api):
+    status_msg = await get_status()
+    return await message.reply(content=status_msg)
+
+
 def _get_disk_usage(path: str):
     try:
         return psutil.disk_usage(path)

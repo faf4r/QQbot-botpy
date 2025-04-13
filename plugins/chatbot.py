@@ -1,7 +1,10 @@
 import asyncio
 
-from openai import AsyncOpenAI
+from botpy.errors import ServerError
 from botpy.ext.cog_yaml import read
+
+from openai import AsyncOpenAI
+from utils import logger, get_content_link
 
 config = read("config.yaml")
 kimi= config["kimi"]
@@ -9,11 +12,64 @@ siliconflow = config["SiliconCloud"]
 default_provider = kimi
 
 
+def call_name():
+    return ['/reset', 'reset', '重置',
+            '/model', 'model', '模型']
+
+
+async def botio(message, info, api):
+    msg = message.content.strip()
+    chatbot_dict = info.setdefault("chatbot_dict", {})
+    if msg.lower().split()[0] in ['/reset', 'reset', '重置']:
+        chatbot = chatbot_dict.setdefault(message.group_openid, ChatBot())
+        chatbot.reset()
+        logger.info("reset done.")
+        return await message.reply(content="已开启新的对话~")
+
+    elif msg.lower().split()[0] in ['/model', 'model', '模型']:
+        txt = msg.lower().split()[1:]
+        if not txt:
+            return await message.reply(
+                content="请指定模型供应商：\n\tkimi: moonshot-v1-8k\n\tsiliconflow: deepseek-ai/DeepSeek-V3"
+            )
+        provider = txt[0]
+        if provider in ['kimi']:
+            provider = config['kimi']
+        elif provider in ['siliconflow', '硅基流动', 'silicon']:
+            provider = config['SiliconCloud']
+        else:
+            return await message.reply(content="目前支持的供应商有：kimi, siliconflow")
+
+        chatbot = chatbot_dict.setdefault(message.group_openid, None)
+        if chatbot is None:
+            chatbot = ChatBot(provider)
+            chatbot_dict[message.group_openid] = chatbot
+        else:
+            chatbot.change_model(provider)
+        logger.info(f"已切换模型为{provider}")
+        return await message.reply(content=f"已切换模型为{provider['model']}")
+
+    else:
+        chatbot = chatbot_dict.setdefault(message.group_openid, ChatBot())
+        result = await chatbot.chat(msg)
+        logger.info(result)
+        logger.debug(chatbot.history)
+        try:
+            return await message.reply(content=result)
+        except ServerError as e:
+            await message.reply(content="消息发送失败了")
+            logger.warning(f"ServerError: {e.msgs}")
+            link = await get_content_link(result, file_type=4)
+            logger.info(f"转为消息链接：{link}")
+            return await message.reply(content=f"请访问链接查看：{link}", msg_seq=2)
+
+
 class ChatBot:
     system_prompt = {
         "role": "system",
         "content": "回答要尽量精简，仅提供问题的核心答案，避免不必要的细节,无特殊说明不要列举。尽量避免使用Markdown语法。回答中不得出现任何网址和链接。",
     }
+
     def __init__(self, provider=default_provider):
         self.client = AsyncOpenAI(
             api_key=provider['key'],

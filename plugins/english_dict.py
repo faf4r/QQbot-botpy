@@ -1,5 +1,71 @@
 import sqlite3
 import re
+from utils import logger
+
+
+def call_name():
+    return ["/单词tag", "单词tag",
+            "/记单词", "记单词", "/单词", "单词",
+            "/exam", "exam", "/测验", "测验",
+            "/answer", "answer", "/回答", "回答"]
+
+
+async def botio(message, info, api):
+    pending_word = info.setdefault("pending_words", {})
+    english = EnglishDict()
+    msg = message.content.strip()
+    group_id = message.group_openid
+    user_id = message.author.member_openid
+
+    if msg.lower().split()[0] in ["/单词tag", "单词tag"]:
+        return await message.reply(content=english.list_tags())
+    elif msg.lower().split()[0] in ["/记单词", "记单词", "/单词", "单词"]:
+        if len(msg.split()) == 1:
+            content = english.random_word()
+        elif len(msg.split()) == 2:
+            arg = msg.split()[1]
+            if arg.isdigit():
+                num = int(arg)
+                content = english.random_word(num=num)
+            else:
+                content = english.random_word(tag=arg)
+        elif len(msg.split()) == 3:
+            arg1, arg2 = msg.split()[1:]
+            num = int(arg1) if arg1.isdigit() else arg2
+            tag = arg1 if not arg1.isdigit() else arg2
+            content = english.random_word(num=num, tag=tag)
+        logger.info(content)
+        return await message.reply(content=content)
+    elif msg.lower().split()[0] in ["/exam", "exam", "/测验", "测验"]:
+        if len(msg.split()) == 1:
+            word, definition = english.get_word_with_definition()
+            possible_answers = english.get_possible_answers(definition)
+            pending_word.setdefault(group_id, {})[user_id] = (word, possible_answers)
+            content = f"写出对应单词：\n{definition}"
+        elif len(msg.split()) == 2:
+            tag = msg.split()[1]
+            if tag not in english.list_tags():
+                return await message.reply(content=f"tag{tag}无效，请对照/单词tag查看可用tag")
+            word, definition = english.get_word_with_definition(tag=tag)
+            possible_answers = english.get_possible_answers(definition)
+            pending_word.setdefault(group_id, {})[user_id] = (word, possible_answers)
+            content = f"写出对应单词：\n{definition}"
+        logger.info(content)
+        return await message.reply(content=content)
+
+    elif msg.lower().split()[0] in ["/answer", "answer", "/回答", "回答"]:
+        if group_id not in pending_word or user_id not in pending_word[group_id]:
+            return await message.reply(content="没有待回答的单词，使用/exam获取待测单词")
+        if len(msg.split()) == 1:
+            return await message.reply(content="请输入单词")
+        usr_answer = msg.split()[1].lower()
+        word, possible_answers = pending_word[group_id].pop(user_id)
+        if usr_answer == word.lower():
+            return await message.reply(content="回答正确！")
+        elif usr_answer in possible_answers:
+            return await message.reply(content=f"同义词，目标单词是：{word}")
+        else:
+            return await message.reply(content=f"回答错误，正确答案是：{word}")
 
 
 class EnglishDict:
