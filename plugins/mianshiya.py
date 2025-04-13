@@ -1,5 +1,35 @@
 import sqlite3
 import asyncio
+from botpy import logging
+from utils import get_short_url, get_logger, logger
+
+
+def call_name():
+    return ['/随机题', '随机题']
+
+
+async def botio(message, info, api):
+    msg = message.content.strip()
+    mianshiya = Mianshiya()
+    if msg.lower().split()[0] in ['/随机题', '随机题']:
+        if len(msg.split()) == 1:
+            content = await mianshiya.random_question()
+        elif len(msg.split()) == 2:
+            tag = msg.split()[1]
+            try:
+                content = await mianshiya.random_question(tag)
+            except ValueError as e:
+                logger.error(repr(e))
+                return await message.reply(content='参数异常')
+        else:
+            return await message.reply(content='参数过多')
+        if content is None:
+            return await message.reply(content='没有相关题目')
+        logger.info(content)
+        url, question = content.split('\n', 1)
+        url = await get_short_url(url)
+        content = f"{url}\n{question}"
+        return await message.reply(content=content)
 
 
 class Mianshiya:

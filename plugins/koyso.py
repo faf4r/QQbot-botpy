@@ -1,7 +1,31 @@
 from lxml import html
-from utils import logger, get_short_url
+from utils import logger, get_short_url, get_content_link
+from botpy.errors import ServerError
 import aiohttp
 import asyncio
+
+
+def call_name():
+    return ["/koyso", "koyso"]
+
+
+async def botio(message, info, api):
+    msg = message.content.strip()
+    if msg.lower().split()[0] in ["/koyso", "koyso"]:
+        if len(msg.split()) == 1:
+            content = await latest_games()
+        elif len(msg.split()) == 2:
+            game_name = msg.split()[1]
+            content = await search_games(game_name)
+        logger.info(content)
+        try:
+            return await message.reply(content=content)
+        except ServerError as e:
+            await message.reply(content="消息发送失败了")
+            logger.warning(f"ServerError: {e.msgs}")
+            link = await get_content_link(content, file_type=4)
+            logger.info(f"转为消息链接：{link}")
+            return await message.reply(content=f"请访问链接查看：{link}", msg_seq=2)
 
 
 async def get_all_games(url):

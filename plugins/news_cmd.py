@@ -1,9 +1,30 @@
 import aiohttp
 from lxml import etree
 
-from utils import get_short_url  # 相对导入，utils与bot.py在同一目录下
+from utils import get_short_url, logger  # 相对导入，utils与bot.py在同一目录下
 
 headers = {'User-Agent': 'Mozilla 5.0'}
+
+
+def call_name():
+    return ['/jwc', 'jwc', '教务处', 'news', '通知',
+            '/xg', 'xg', '学工']
+
+
+async def botio(message, info, api):
+    msg = message.content.strip()
+    if msg.lower().split()[0] in ['/jwc', 'jwc', '教务处', 'news', '通知']:
+        await message.reply(content='查询中...', msg_seq=1)
+        jwc_news = await jwc5news()
+        logger.info(jwc_news)
+        return await message.reply(content=jwc_news, msg_seq=2)
+
+    elif msg.lower().split()[0] in ['/xg', 'xg', '学工']:
+        await message.reply(content='查询中...', msg_seq=1)
+        xg_news = await xg5news()
+        logger.info(xg_news)
+        return await message.reply(content=xg_news, msg_seq=2)
+
 
 async def jwc5news():
     jwc_url = 'http://jwc.swjtu.edu.cn/vatuu/WebAction?setAction=newsList'
